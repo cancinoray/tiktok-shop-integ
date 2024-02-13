@@ -1,0 +1,13 @@
+.env
+.env*
+/node_modules
+.idea/*
+/bakcup/*
+*.log
+build/
+tmp/
+temp/
+coverage/*
+/trunk/*
+*.note
+dist/
