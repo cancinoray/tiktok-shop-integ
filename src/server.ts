@@ -15,13 +15,6 @@ const PORT = config.port;
 // Body Parsing Middleware
 app.use(bodyParser());
 
-// View Engine Middleware
-// app.use(
-//     views(path.join(__dirname, 'views'), {
-//         extension: 'pug'
-//     })
-// )
-
 // Static Files Middleware
 app.use(koaStatic(path.join(__dirname, "statics")));
 
