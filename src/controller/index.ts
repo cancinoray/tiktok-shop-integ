@@ -13,6 +13,9 @@ export async function getUserId(ctx: any) {
   const decodedString = JSON.stringify(decoded);
   const decodedParse = JSON.parse(decodedString);
 
+  // console.log(decodedParse, "decodedParse");
+  // console.log(decodedParse.id, "decodedParse.id");
+
   return decodedParse.id;
 }
 
@@ -56,7 +59,8 @@ export async function saveInteg(
   access_token_expire_in: any,
   refresh_token: any,
   refresh_token_expire_in: any,
-  seller_name: any
+  seller_name: any,
+  shop_cipher: any
 ) {
   console.log("SaveInteg is Fired Up!");
 
@@ -105,6 +109,13 @@ export async function saveInteg(
           created_at: new Date(),
           updated_at: new Date(),
         },
+        {
+          integration_id: saveIntegId,
+          name: "shop_cipher",
+          value: shop_cipher.toString(),
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
       ],
     });
 
@@ -114,5 +125,116 @@ export async function saveInteg(
     console.error("Response Data:", error.response ? error.response.data : "No response data");
     ctx.status = 500;
     ctx.body = "Internal Server Error";
+  }
+}
+
+// export async function updateInteg(ctx: any) {
+//   const body = ctx.request.body;
+//   const id = body["id"];
+//   const name = body["name"];
+//   const nickname = body["nickname"];
+//   const active = body["active"];
+
+//   try {
+//     const updatedInteg = await prisma.integrations.update({
+//       where: {
+//         id: id,
+//       },
+//       data: {
+//         name,
+//         nickname,
+//         active,
+//         updated_at: new Date(),
+//       },
+//     });
+
+//     ctx.status = 200;
+//     return updatedInteg;
+//   } catch (error: any) {
+//     console.error(error, "Error!");
+//     ctx.status = 400;
+//     return (ctx.body = error);
+//   }
+// }
+
+export async function getShop(ctx: any) {
+  const body = ctx.request.body;
+  const id = body["id"];
+  try {
+    // const integSetting = await prisma.integration_settings.findFirst({
+    //   where: {
+
+    //   }
+    // })
+    console.log(body, "body");
+    console.log(id);
+  } catch (error: any) {
+    console.error(error, "Error!");
+    ctx.status = 400;
+    return (ctx.body = error);
+  }
+}
+
+export async function processDatabase(ctx: any) {
+  console.log("Processing!");
+  // console.log(ctx.header.authorization, "ctx is here");
+  const userID = await getUserId(ctx);
+  const integrationId: number = +ctx.params.id;
+
+  try {
+    await prisma.integrations.update({
+      where: {
+        id: integrationId,
+      },
+      data: {
+        user_id: userID,
+      },
+    });
+    ctx.status = 200;
+  } catch (error: any) {
+    console.error("Error:", error);
+    console.error("Response Data:", error.response ? error.response.data : "No response data");
+    ctx.status = 500;
+    ctx.body = "Internal Server Error";
+  }
+}
+
+export async function deleteIntegration(ctx:any) {
+  const userId = await getUserId(ctx)
+  const integrationId: number = +ctx.params.id
+
+  try {
+    await prisma.integration_settings.updateMany({
+      where: {
+          integration_id: integrationId
+      },
+      data: {
+          deleted_at: new Date()
+      }
+    })
+
+    await prisma.integrations.update({
+      where: {
+          id: integrationId
+      },
+      data: {
+          deleted_at: new Date()
+      }
+    })
+
+    await prisma.orders.updateMany({
+      where : {
+        integration_id: integrationId
+      },
+      data: {
+        deleted_at: new Date()
+      }
+    })
+
+    ctx.status = 200
+  } catch (error: any) {
+    ctx.body = error
+    ctx.status = 400
+    return ctx
   }
 }
